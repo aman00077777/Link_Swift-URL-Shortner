@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LinkSwift - Premium URL Shortener & Analytics{% endblock %}</title>
+    
+    <!-- Meta tags for SEO -->
+    <meta name="description" content="Shorten your links, generate dynamic custom QR codes, and track detailed geolocation, device, browser, and click metrics in real-time.">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Custom Favicon placeholder -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>⚡</text></svg>">
+    
+    <!-- CSS imports -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Plotly.js CDN for Analytics Dashboard rendering -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="{{ url_for('index') }}" class="brand" id="brand-logo">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>LinkSwift</span>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}" id="nav-home">
+                        <i class="fa-solid fa-link"></i> Shorten
+                    </a>
+                    <a href="{{ url_for('global_analytics') }}" class="nav-link {% if request.path == '/analytics' %}active{% endif %}" id="nav-global-analytics">
+                        <i class="fa-solid fa-chart-line"></i> Global Analytics
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main>
+        <div class="container">
+            <!-- Flask Flash Messaging -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="toast-container" id="flash-container">
+                        {% for category, message in messages %}
+                            <div class="toast {{ category }}" style="transform: translateX(0); animation: none; margin-bottom: 0.5rem;">
+                                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'error' %}fa-circle-xmark{% else %}fa-circle-exclamation{% endif %}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Global Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>
+                Made with <i class="fa-solid fa-heart"></i> &copy; {{ now }} LinkSwift Analytics. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- JS Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+Flask
+python-dotenv
+qrcode
+pillow
+requests
+plotly

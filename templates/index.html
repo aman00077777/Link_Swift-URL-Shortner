@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Shorten & Analyze | LinkSwift{% endblock %}
+
+{% block content %}
+<div class="hero-layout">
+    <!-- Hero Left: Action Form -->
+    <div class="hero-content">
+        <h1>Shorten. Share. <br><span class="gradient-text">Track Performance.</span></h1>
+        <p class="subtitle">
+            LinkSwift is a premium, developer-centric URL shortener with high-fidelity analytics and instant QR code generators. Elevate your link campaign operations.
+        </p>
+
+        <!-- Shortener Form Card -->
+        <div class="card" id="shorten-card">
+            <form id="shorten-form" onsubmit="handleShorten(event)">
+                <div class="form-group">
+                    <label class="form-label" for="original_url">Destination Long URL</label>
+                    <div class="input-container">
+                        <input type="text" id="original_url" class="form-input" placeholder="https://example.com/very/long/destination/path" required autocomplete="off">
+                        <i class="fa-solid fa-link"></i>
+                    </div>
+                </div>
+
+                <!-- Custom code toggle -->
+                <button type="button" class="btn-toggle-options" onclick="toggleCustomCode()">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Custom URL Alias (Optional)</span>
+                    <i class="fa-solid fa-chevron-down" id="toggle-chevron" style="transition: transform 0.3s;"></i>
+                </button>
+
+                <div class="expandable-options" id="custom-code-container">
+                    <div class="form-group">
+                        <label class="form-label" for="custom_code">Custom Short Slug</label>
+                        <div class="input-container">
+                            <input type="text" id="custom_code" class="form-input" placeholder="my-campaign-alias" autocomplete="off">
+                            <i class="fa-solid fa-signature"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btn-submit">
+                    <span class="spinner" id="btn-spinner"></span>
+                    <span id="btn-text">Generate Swift Link</span>
+                    <i class="fa-solid fa-arrow-right" id="btn-icon-arrow"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Result Panel -->
+        <div class="result-container" id="result-panel">
+            <div class="card" style="border-color: var(--color-green);">
+                <div class="result-header">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Swift Link Generated!</span>
+                </div>
+                
+                <div class="result-url-box">
+                    <span class="short-url-text" id="result-short-url"></span>
+                    <button class="btn-icon" onclick="copyResultUrl()" title="Copy Link">
+                        <i class="fa-regular fa-copy" id="copy-btn-icon"></i>
+                    </button>
+                </div>
+
+                <div class="result-details">
+                    <!-- QR Code Viewer -->
+                    <div class="qr-box">
+                        <img src="" id="result-qr-img" alt="QR Code Link">
+                        <button class="btn-outline" style="width: 100%; padding: 0.6rem;" onclick="downloadQrCode()">
+                            <i class="fa-solid fa-download"></i> Download QR
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="actions-box">
+                        <a href="" class="btn-outline" id="result-analytics-btn">
+                            <i class="fa-solid fa-chart-pie"></i> View Analytics
+                        </a>
+                        <button class="btn-outline" onclick="resetForm()">
+                            <i class="fa-solid fa-rotate-left"></i> Shorten Another
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Right: Interactive Dashboard Intro -->
+    <div class="hero-graphic">
+        <div class="card" style="border-color: rgba(255, 255, 255, 0.05); background: rgba(17, 19, 31, 0.4);">
+            <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-chart-line gradient-text"></i> Live Tracking Features
+            </h3>
+            
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 1.25rem;">
+                <li style="display: flex; gap: 1rem; align-items: flex-start;">
+                    <span class="kpi-icon purple" style="width: 38px; height: 38px; font-size: 1.1rem; flex-shrink: 0;"><i class="fa-solid fa-globe"></i></span>
+                    <div>
+                        <strong style="display: block; font-size: 0.95rem; margin-bottom: 0.15rem;">IP Geolocation tracking</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Automatically resolves incoming requests down to specific country origins.</span>
+                    </div>
+                </li>
+                <li style="display: flex; gap: 1rem; align-items: flex-start;">
+                    <span class="kpi-icon blue" style="width: 38px; height: 38px; font-size: 1.1rem; flex-shrink: 0;"><i class="fa-solid fa-laptop"></i></span>
+                    <div>
+                        <strong style="display: block; font-size: 0.95rem; margin-bottom: 0.15rem;">Device & User-Agent breakdown</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Sorts user devices (macOS, Windows, iOS, Linux) and browsers (Chrome, Firefox, Safari).</span>
+                    </div>
+                </li>
+                <li style="display: flex; gap: 1rem; align-items: flex-start;">
+                    <span class="kpi-icon green" style="width: 38px; height: 38px; font-size: 1.1rem; flex-shrink: 0;"><i class="fa-solid fa-share-nodes"></i></span>
+                    <div>
+                        <strong style="display: block; font-size: 0.95rem; margin-bottom: 0.15rem;">Referrer origins</strong>
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">Identifies whether visitors arrived from Direct, Google, LinkedIn, or Twitter campaigns.</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- History Section -->
+<div class="history-section">
+    <h2 class="section-title">
+        <i class="fa-solid fa-clock-rotate-left gradient-text"></i>
+        <span>Recently Shortened Links</span>
+    </h2>
+
+    <div class="table-container">
+        {% if recent_urls %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Short Link</th>
+                        <th>Original Destination</th>
+                        <th>Created At</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_urls %}
+                        <tr id="row-{{ item.short_code }}">
+                            <td class="col-short">
+                                <a href="{{ base_url }}/{{ item.short_code }}" target="_blank" style="color: var(--color-purple); text-decoration: none; font-weight: 600;">
+                                    {{ item.short_code }}
+                                </a>
+                            </td>
+                            <td class="col-url" title="{{ item.original_url }}">{{ item.original_url }}</td>
+                            <td style="color: var(--text-secondary); font-size: 0.9rem;">{{ item.created_at }}</td>
+                            <td style="text-align: right;">
+                                <div class="table-actions" style="justify-content: flex-end;">
+                                    <button class="btn-icon" onclick="copyLinkDirect('{{ base_url }}/{{ item.short_code }}', '{{ item.short_code }}')" title="Copy URL" id="copy-direct-{{ item.short_code }}">
+                                        <i class="fa-regular fa-copy"></i>
+                                    </button>
+                                    <a href="{{ url_for('url_analytics', short_code=item.short_code) }}" class="btn-icon" title="View Dashboard" id="analytics-direct-{{ item.short_code }}">
+                                        <i class="fa-solid fa-chart-line"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div style="padding: 3rem; text-align: center; color: var(--text-secondary);">
+                <i class="fa-solid fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; color: var(--text-muted);"></i>
+                <p>No active links available. Create your first shortened link above!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

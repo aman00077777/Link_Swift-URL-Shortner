@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if is_global %}Global Insights | LinkSwift{% else %}Metrics /{{ url.short_code }} | LinkSwift{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="header-actions-row">
+    <div>
+        {% if is_global %}
+            <h1>Global <span class="gradient-text">Consolidated Analytics</span></h1>
+            <p class="subtitle" style="margin-bottom: 0;">Comprehensive system aggregates across all active shortened URLs.</p>
+        {% else %}
+            <h1 style="margin-bottom: 0.25rem;">Link Insights: <span class="gradient-text">/{{ url.short_code }}</span></h1>
+            <p class="subtitle" style="margin-bottom: 0; word-break: break-all;">
+                <strong>Destination:</strong> <a href="{{ url.original_url }}" target="_blank" style="color: var(--text-secondary); text-decoration: underline;">{{ url.original_url }}</a>
+            </p>
+        {% endif %}
+    </div>
+    
+    <!-- Navigation Options -->
+    <div style="display: flex; gap: 0.75rem;">
+        {% if not is_global %}
+            <a href="{{ url_for('index') }}" class="btn-outline" style="padding: 0.6rem 1rem; font-size: 0.9rem;">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <button class="btn-outline" onclick="copyLinkDirect('{{ base_url }}/{{ url.short_code }}', '{{ url.short_code }}')" id="copy-btn-analytics" style="padding: 0.6rem 1rem; font-size: 0.9rem;">
+                <i class="fa-regular fa-copy"></i> Copy Short Link
+            </button>
+            <a href="{{ base_url }}/{{ url.short_code }}" target="_blank" class="btn-outline" style="padding: 0.6rem 1rem; font-size: 0.9rem; background: rgba(255,255,255,0.02);">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit URL
+            </a>
+        {% endif %}
+        
+        <!-- Simulate traffic loader button -->
+        {% if not is_global %}
+            <button class="btn-action-accent" data-url-id="{{ url.id }}" onclick="triggerSimulation(this.dataset.urlId)" id="btn-simulate">
+                <i class="fa-solid fa-robot"></i>
+                <span id="simulate-btn-text">Simulate Clicks</span>
+            </button>
+        {% else %}
+            <button class="btn-action-accent" onclick="triggerSimulation(null)" id="btn-simulate">
+                <i class="fa-solid fa-robot"></i>
+                <span id="simulate-btn-text">Simulate Clicks</span>
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- KPI Cards Grid -->
+<div class="dashboard-grid">
+    <!-- Total Clicks -->
+    <div class="card kpi-card">
+        <span class="kpi-icon purple"><i class="fa-solid fa-arrow-pointer"></i></span>
+        <div class="kpi-details">
+            <span class="kpi-label">Total Clicks</span>
+            <span class="kpi-val">{{ kpis.total_clicks }}</span>
+        </div>
+    </div>
+    
+    <!-- Unique Visitors -->
+    <div class="card kpi-card">
+        <span class="kpi-icon blue"><i class="fa-solid fa-fingerprint"></i></span>
+        <div class="kpi-details">
+            <span class="kpi-label">Unique Visitors</span>
+            <span class="kpi-val">{{ kpis.unique_visitors }}</span>
+        </div>
+    </div>
+    
+    <!-- Top Geolocation -->
+    <div class="card kpi-card">
+        <span class="kpi-icon green"><i class="fa-solid fa-earth-americas"></i></span>
+        <div class="kpi-details">
+            <span class="kpi-label">Top Location</span>
+            <span class="kpi-val" style="font-size: 1.3rem;">{{ kpis.top_country }}</span>
+        </div>
+    </div>
+    
+    <!-- Top Platform -->
+    <div class="card kpi-card">
+        <span class="kpi-icon pink"><i class="fa-solid fa-laptop-code"></i></span>
+        <div class="kpi-details">
+            <span class="kpi-label">Top Platform</span>
+            <span class="kpi-val" style="font-size: 1.3rem;">{{ kpis.top_device }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Graphical Charts Segment -->
+{% if kpis.total_clicks > 0 %}
+    <!-- Chart Grid 1: Clicks and Platforms -->
+    <div class="charts-grid">
+        <div class="card chart-card">
+            <div id="chart-timeline" class="chart-container"></div>
+        </div>
+        <div class="card chart-card">
+            <div id="chart-devices" class="chart-container"></div>
+        </div>
+    </div>
+
+    <!-- Chart Grid 2: Geolocation and Browsers -->
+    <div class="charts-grid-secondary">
+        <div class="card chart-card">
+            <div id="chart-countries" class="chart-container"></div>
+        </div>
+        <div class="card chart-card">
+            <div id="chart-browsers" class="chart-container"></div>
+        </div>
+    </div>
+
+    <!-- Click Logs Table -->
+    <div class="history-section" style="margin-top: 3.5rem;">
+        <h2 class="section-title">
+            <i class="fa-solid fa-list-check gradient-text"></i>
+            <span>Detailed Tracking History Log</span>
+        </h2>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>IP Address</th>
+                        <th>Country</th>
+                        <th>Device Platform</th>
+                        <th>Web Browser</th>
+                        <th>Referrer Host</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for click in recent_clicks %}
+                        <tr>
+                            <td style="color: var(--text-primary); font-size: 0.9rem; font-weight: 500;">{{ click.timestamp }}</td>
+                            <td style="font-family: monospace; color: var(--text-secondary);">{{ click.ip_address }}</td>
+                            <td>
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.08); color: var(--color-green); border-color: rgba(16, 185, 129, 0.15);">
+                                    {{ click.country }}
+                                </span>
+                            </td>
+                            <td>{{ click.device }}</td>
+                            <td>{{ click.browser }}</td>
+                            <td class="col-url" title="{{ click.referrer }}" style="color: var(--text-secondary);">{{ click.referrer }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Load Plotly graphs -->
+    <div id="plotly-charts-data"
+         data-timeline='{{ charts_json.timeline | safe }}'
+         data-devices='{{ charts_json.devices | safe }}'
+         data-countries='{{ charts_json.countries | safe }}'
+         data-browsers='{{ charts_json.browsers | safe }}'
+         style="display: none;">
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const dataEl = document.getElementById("plotly-charts-data");
+            if (!dataEl) return;
+
+            // Retrieve and parse JSON chart configurations injected by Flask controller
+            const timelineData = JSON.parse(dataEl.dataset.timeline);
+            const devicesData = JSON.parse(dataEl.dataset.devices);
+            const countriesData = JSON.parse(dataEl.dataset.countries);
+            const browsersData = JSON.parse(dataEl.dataset.browsers);
+
+            // Set responsive configurations
+            const configObj = {
+                responsive: true,
+                displayModeBar: false
+            };
+
+            // Render interactive Plotly charts
+            Plotly.newPlot("chart-timeline", timelineData.data, timelineData.layout, configObj);
+            Plotly.newPlot("chart-devices", devicesData.data, devicesData.layout, configObj);
+            Plotly.newPlot("chart-countries", countriesData.data, countriesData.layout, configObj);
+            Plotly.newPlot("chart-browsers", browsersData.data, browsersData.layout, configObj);
+        });
+    </script>
+
+{% else %}
+    <!-- Empty State dashboard -->
+    <div class="card" style="text-align: center; padding: 5rem 2rem; border-style: dashed; border-color: var(--border-accent);">
+        <i class="fa-solid fa-chart-bar" style="font-size: 4.5rem; color: var(--text-muted); margin-bottom: 1.5rem; display: block;"></i>
+        <h2 style="font-weight: 700; margin-bottom: 0.75rem;">No Tracking Logs Captured</h2>
+        <p class="subtitle" style="max-width: 500px; margin: 0 auto 2rem;">
+            This URL hasn't been accessed yet. Share your short link to gather analytics, or hit the simulate button to inject realistic demo parameters.
+        </p>
+        
+        {% if not is_global %}
+            <button class="btn-action-accent" data-url-id="{{ url.id }}" onclick="triggerSimulation(this.dataset.urlId)" style="margin: 0 auto; padding: 1rem 2rem; font-size: 1.05rem;" id="btn-simulate-empty">
+                <i class="fa-solid fa-robot"></i> Simulate 60 Tracking Clicks
+            </button>
+        {% else %}
+            <button class="btn-action-accent" onclick="triggerSimulation(null)" style="margin: 0 auto; padding: 1rem 2rem; font-size: 1.05rem;" id="btn-simulate-empty">
+                <i class="fa-solid fa-robot"></i> Simulate 60 Tracking Clicks
+            </button>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
